@@ -4,18 +4,15 @@ import bs4 as bs
 
 class EmailPurger:
 
-    def __init__(self, e, p):
+    def __init__(self, email, password):
         self.driver = webdriver.Firefox()
-        self.email = e
-        self.password = p
+        self.email = email
+        self.password = password
 
     def login(self):
         #navigating to login page
         self.driver.get('https://www.google.com/gmail')
         sleep(5)
-        #sign_in = self.driver.find_element_by_xpath('/html/body/div[2]/div[1]/div[4]/ul[1]/li[2]/a')
-        #sign_in.click()
-
 
         #filling out the email field
         email_xpath = '//*[@id="identifierId"]'
@@ -30,8 +27,7 @@ class EmailPurger:
 
     #deletes mail until there is no more mail 
     def delete_mail(self):
-        #let the page load
-        sleep(10)
+        mail_deleted = False
         #get the html source for soup to parse through
         html = self.driver.page_source
         soup = bs.BeautifulSoup(html, 'html.parser')
@@ -44,12 +40,55 @@ class EmailPurger:
             if "Not starred" in contents and "Not important" in contents:
                 checkbox_id = email.find('div', attrs={'role':'checkbox'}).get('id')
                 checkbox = self.driver.find_element_by_id(checkbox_id)
-                checkbox.click()
+                #waits for pop up to disappear if it is in the way of the checkbox
+                try:
+                    checkbox.click()
+                except:
+                    return False
+
+                mail_deleted = True
         
         #click delete button
-        delete_button = self.driver.find_element_by_xpath('/html/body/div[7]/div[3]/div/div[2]/div[1]/div[2]/div/div/div/div/div[1]/div/div[1]/div[1]/div/div/div[2]/div[3]/div')
-        delete_button.click()
-        sleep(5)
+        try:
+            delete_button = self.driver.find_element_by_xpath('/html/body/div[7]/div[3]/div/div[2]/div[1]/div[2]/div/div/div/div/div[1]/div/div[1]/div[1]/div/div/div[2]/div[3]/div')
+            delete_button.click()
+            sleep(5)
+        except:
+            return False
+
+        return mail_deleted
+
+    #navigates to the next page once all emails are deleted
+    def next_page(self):
+        next = self.driver.find_element_by_id(':la')
+
+        html = self.driver.page_source
+        soup = bs.BeautifulSoup(html, 'html.parser')
+        next_html = soup.find('div', attrs={'id':':la'})
+
+        if "disabled" in str(next_html.contents):
+            return False
+        else:
+            next.click()
+            return True
+    
+    #goes to the previous page in inbox
+    def prev_page(self):
+        prev = self.driver.find_element_by_id(':l9')
+
+        html = self.driver.page_source
+        soup = bs.BeautifulSoup(html, 'html.parser')
+        prev_html = soup.find('div', attrs={'id':':l9'})
+
+        if "disabled" in str(prev_html.contents):
+            return False
+        else:
+            prev.click()
+            return True
+
+    #closes the browser window  
+    def close(self):
+        self.driver.close()
 
     #fills a text field with a given input
     def fill_field(self, input, field_path, btn_path):
