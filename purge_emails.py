@@ -26,28 +26,43 @@ class EmailPurger:
         self.fill_field(self.password, pass_xpath, next_btn_path)
 
     #deletes mail until there is no more mail 
-    def delete_mail(self):
-        mail_deleted = False
+    def delete_mail(self, operation):
         #get the html source for soup to parse through
         html = self.driver.page_source
         soup = bs.BeautifulSoup(html, 'html.parser')
         emails = soup.find_all('tr', attrs={'class':'zA'})
-
-        #loop through each email stored in a table row
+        delete = False
+        
         for email in emails:
             contents = str(email.contents)
 
-            if "Not starred" in contents and "Not important" in contents:
+            #option 1: keep only starred emails
+            if operation == 1:
+                if 'Not starred' in contents:
+                    delete = True
+
+            #option 2: keep only important emails
+            if operation == 2:
+                if 'Not important' in contents:
+                    delete = True
+            
+            #option 3: keep both starred and important emails
+            if operation == 3:
+                if 'Not important' in contents and 'Not starred' in contents:
+                    delete = True
+
+            #option 4: delete all mail
+            if (operation == 4):
+                delete = True
+
+            if delete:
                 checkbox_id = email.find('div', attrs={'role':'checkbox'}).get('id')
                 checkbox = self.driver.find_element_by_id(checkbox_id)
-                #waits for pop up to disappear if it is in the way of the checkbox
                 try:
                     checkbox.click()
                 except:
-                    return False
-
-                mail_deleted = True
-        
+                    sleep(3)
+    
         #click delete button
         try:
             delete_button = self.driver.find_element_by_xpath('/html/body/div[7]/div[3]/div/div[2]/div[1]/div[2]/div/div/div/div/div[1]/div/div[1]/div[1]/div/div/div[2]/div[3]/div')
@@ -56,7 +71,7 @@ class EmailPurger:
         except:
             return False
 
-        return mail_deleted
+        return True
 
     #navigates to the next page once all emails are deleted
     def next_page(self):
@@ -66,26 +81,12 @@ class EmailPurger:
         soup = bs.BeautifulSoup(html, 'html.parser')
         next_html = soup.find('div', attrs={'id':':la'})
 
-        if "disabled" in str(next_html.contents):
+        if 'aria-disabled="true"' in str(next_html):
             return False
-        else:
-            next.click()
-            return True
+
+        next.click()
+        return True
     
-    #goes to the previous page in inbox
-    def prev_page(self):
-        prev = self.driver.find_element_by_id(':l9')
-
-        html = self.driver.page_source
-        soup = bs.BeautifulSoup(html, 'html.parser')
-        prev_html = soup.find('div', attrs={'id':':l9'})
-
-        if "disabled" in str(prev_html.contents):
-            return False
-        else:
-            prev.click()
-            return True
-
     #closes the browser window  
     def close(self):
         self.driver.close()

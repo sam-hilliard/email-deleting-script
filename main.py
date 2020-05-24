@@ -6,11 +6,20 @@ def main():
     email = input('Enter your email: ')
     password = input('Enter your password: ')
 
+    print('\nChoose a delete operation: ')
+    print('[1] Only keep starred mail')
+    print('[2] Only keep imporant mail')
+    print('[3] Keep both starred and imporant mail')
+    print('[4] Delete all mail')
+    operation = input()
+    print('operation ' + operation + ' selected')
+    operation = int(operation)
+
     purger = purge_emails.EmailPurger(email, password)
     print('Logging in with user, ' + email + ', and password, ' + password + '...')
     purger.login()
 
-    print('Deleting unimportant emails...')
+    print('Deleting specified emails...')
     sleep(10)
 
     emails_remaining = True
@@ -19,18 +28,8 @@ def main():
     can_next = True
     while(can_next):
         while(emails_remaining):
-            emails_remaining = purger.delete_mail()
+            emails_remaining = purger.delete_mail(operation)
         can_next = purger.next_page()
-        sleep(5)
-        #causes infinite loop
-        emails_remaining = True
-
-    #go back the other direction to delete older emails
-    can_prev = True
-    while(can_prev):
-        while(emails_remaining):
-            emails_remaining = purger.delete_mail()
-        can_prev = purger.prev_page()
         sleep(5)
         emails_remaining = True
 
