@@ -4,54 +4,62 @@ import bs4 as bs
 
 class EmailPurger:
 
-    def __init__(self, email, password):
-        self.driver = webdriver.Firefox()
+    def __init__(self, email, password, browser):
+        if browser == 1:
+            self.driver = webdriver.Chrome()
+        if browser == 2:
+            self.driver = webdriver.Firefox()
+        if browser == 3:
+            self.driver = webdriver.Safari()
+        if browser == 4:
+            self.driver = webdriver.Opera()
+            
         self.email = email
         self.password = password
 
     def login(self):
-        #navigating to login page
+        # navigating to login page
         self.driver.get('https://www.google.com/gmail')
         sleep(5)
 
-        #filling out the email field
+        # filling out the email field
         email_xpath = '//*[@id="identifierId"]'
         next_btn_path = '/html/body/div[1]/div[1]/div[2]/div/div[2]/div/div/div[2]/div/div[2]/div/div[1]/div/div/span'
         self.fill_field(self.email, email_xpath, next_btn_path)
         sleep(5)
 
-        #filling out the password field
+        # filling out the password field
         pass_xpath = '/html/body/div[1]/div[1]/div[2]/div/div[2]/div/div/div[2]/div/div[1]/div/form/span/section/div/div/div[1]/div[1]/div/div/div/div/div[1]/div/div[1]/input'
         next_btn_path = '/html/body/div[1]/div[1]/div[2]/div/div[2]/div/div/div[2]/div/div[2]/div/div[1]/div/div/span/span'
         self.fill_field(self.password, pass_xpath, next_btn_path)
 
-    #deletes mail until there is no more mail 
+    # deletes mail until there is no more mail 
     def delete_mail(self, operation):
-        #get the html source for soup to parse through
+        # get the html source for soup to parse through
         html = self.driver.page_source
         soup = bs.BeautifulSoup(html, 'html.parser')
         emails = soup.find_all('tr', attrs={'class':'zA'})
-        delete = False
         
         for email in emails:
+            delete = False
             contents = str(email.contents)
 
-            #option 1: keep only starred emails
+            # option 1: keep only starred emails
             if operation == 1:
                 if 'Not starred' in contents:
                     delete = True
 
-            #option 2: keep only important emails
+            # option 2: keep only important emails
             if operation == 2:
                 if 'Not important' in contents:
                     delete = True
             
-            #option 3: keep both starred and important emails
+            # option 3: keep both starred and important emails
             if operation == 3:
                 if 'Not important' in contents and 'Not starred' in contents:
                     delete = True
 
-            #option 4: delete all mail
+            # option 4: delete all mail
             if (operation == 4):
                 delete = True
 
@@ -63,7 +71,7 @@ class EmailPurger:
                 except:
                     sleep(3)
     
-        #click delete button
+        # click delete button
         try:
             delete_button = self.driver.find_element_by_xpath('/html/body/div[7]/div[3]/div/div[2]/div[1]/div[2]/div/div/div/div/div[1]/div/div[1]/div[1]/div/div/div[2]/div[3]/div')
             delete_button.click()
@@ -73,7 +81,7 @@ class EmailPurger:
 
         return True
 
-    #navigates to the next page once all emails are deleted
+    # navigates to the next page once all emails are deleted
     def next_page(self):
         next = self.driver.find_element_by_id(':la')
 
@@ -87,11 +95,11 @@ class EmailPurger:
         next.click()
         return True
     
-    #closes the browser window  
+    # closes the browser window  
     def close(self):
         self.driver.close()
 
-    #fills a text field with a given input
+    # fills a text field with a given input
     def fill_field(self, input, field_path, btn_path):
         field = self.driver.find_element_by_xpath(field_path)
         field.send_keys(input)
