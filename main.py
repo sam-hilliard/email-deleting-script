@@ -73,7 +73,14 @@ def main():
     print('Logging in with user, ' + email + ', and password, ' + password + '...')
 
     # give an error message if the login failed
+    prev_page = purger.driver.current_url
     purger.login()
+    next_page = purger.driver.current_url
+
+    if prev_page == next_page:
+        print('Login failed.')
+        print('Try running the script again, making sure that the email address and password are correct.')
+        return False
 
     print('Deleting specified emails...')
     sleep(10)
